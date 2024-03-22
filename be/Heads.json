@@ -1,0 +1,16 @@
+[
+    {
+        "org_id" : 1,
+        "name_en" : "SAINT LAURENT BILINGUAL SCHOOL COMPLEX",
+        "name_fr" : "COMPLEXE SCOLAIRE BILINGUE SAINT LAURENT",
+        "box_en" : "PO BOX: 161 Eseka Tel: (237) 690198917",
+        "box_fr" : "BP: 161 Eseka Tel (237): 690198917"
+    },
+    {
+        "org_id" : 2,
+        "name_en" : "SAINT LAURENT BILINGUAL SCHOOL COMPLEX",
+        "name_fr" : "COMPLEXE SCOLAIRE BILINGUE SAINT LAURENT",
+        "box_en" : "PO BOX: 161 Eseka Tel: (237) 690198917",
+        "box_fr" : "BP: 161 Eseka Tel (237): 690198917"
+    }
+]
