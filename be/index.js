@@ -1525,7 +1525,7 @@ app.all('/createclassroom', (req, res) => {
 		return;
 	}
 	
-	const query = 'SELECT createclassroom('+ mysql.escape(connid)+','+mysql.escape(cname)+','+mysql.escape(abbreviation)+','+mysql.escape(letter)+','+mysql.escape(descript)+')';
+	const query = 'SELECT createclassroom('+ mysql.escape(connid)+','+mysql.escape(cname)+','+mysql.escape(abbreviation)+','+mysql.escape(descript)+','+mysql.escape(letter)+')';
 
 	con.query(query, (err, rows) => {
 		if (err) {
@@ -1549,7 +1549,8 @@ app.all('/modifyclassroom', (req, res) => {
 	let abbreviation = '';
 	let fee = '';
 	let descript = '';
-
+	let letter = ''
+;
 	if(req.query.hasOwnProperty('classid') || req.body.hasOwnProperty('classid')) {
 		classid = req.query.hasOwnProperty('classid') ? req.query["classid"] : req.body["classid"] ;
 	} else {
@@ -1578,6 +1579,13 @@ app.all('/modifyclassroom', (req, res) => {
 		return;
 	}
 
+	if(req.query.hasOwnProperty('letter') || req.body.hasOwnProperty('letter')) {
+		letter = req.query.hasOwnProperty('letter') ? req.query["letter"] : req.body["letter"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- letter"));
+		return;
+	}
+
 	if(req.query.hasOwnProperty('descr') || req.body.hasOwnProperty('descr')) {
 		descript = req.query.hasOwnProperty('descr') ? req.query["descr"] : req.body["descr"] ;
 	} else {
@@ -1585,7 +1593,7 @@ app.all('/modifyclassroom', (req, res) => {
 		return;
 	}
 	
-	const query = 'SELECT updateclassroom('+mysql.escape(connid)+','+mysql.escape(classid)+','+mysql.escape(cname)+','+mysql.escape(abbreviation)+','+mysql.escape(descript)+')';
+	const query = 'SELECT updateclassroom('+mysql.escape(connid)+','+mysql.escape(classid)+','+mysql.escape(cname)+','+mysql.escape(abbreviation)+','+mysql.escape(descript)+','+mysql.escape(letter)+')';
 
 	con.query(query, (err, rows) => {
 		if (err) {
