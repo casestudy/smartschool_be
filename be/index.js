@@ -2053,7 +2053,7 @@ app.all('/removegroupsubject', (req, res) => {
 });
 
 // Get all academic years
-app.get('/getyears', (req, res) => { 
+app.all('/getyears', (req, res) => { 
 	const con = new Client(conndetails);
 	con.connect();
 
@@ -2080,7 +2080,7 @@ app.get('/getyears', (req, res) => {
 });
 
 // create year
-app.get('/createyear', (req, res) => { 
+app.all('/createyear', (req, res) => { 
 	const con = new Client(conndetails);
 	con.connect();
 
@@ -2139,7 +2139,7 @@ app.get('/createyear', (req, res) => {
 });
 
 // edit year
-app.get('/modifyyear', (req, res) => { 
+app.all('/modifyyear', (req, res) => { 
 	const con = new Client(conndetails);
 	con.connect();
 
