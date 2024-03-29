@@ -82,19 +82,27 @@ BEGIN
                 WHERE f.userid = in_userid AND f.yearid = active_year(v_orgid)) AS t);
 
     IF v_fees IS NULL THEN
-        v_fees := '[]';
-    ELSE
-        v_details := (SELECT json_agg(t) FROM (SELECT u.userid, u.surname, u.othernames, u.dob, u.gender, s.matricule, s.doe, s.pob, s.sstatus, st.descript, c.cname, c.classid, c.abbreviation AS cabbrev
-                      FROM users u INNER JOIN students s ON u.userId = s.userId
-                      INNER JOIN classrooms c ON s.classid = c.classid 
-                      INNER JOIN studentstatuses st ON s.sstatus = st.sstatus
-                      WHERE u.orgid=v_orgid AND u.usertype='student' AND is_system_user(u.username)=0
-                                            AND u.deleted=FALSE AND u.userid=in_userid) AS t);
-
-        v_year := (SELECT json_agg(t) FROM (SELECT startdate, enddate FROM academicyear WHERE yearid=active_year(v_orgid)) AS t);
+        v_fees := '[]'; 
     END IF;
 
-    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_fees,', "details":',v_details,', "calendar": ',v_year,'}}');
+    v_details := (SELECT json_agg(t) FROM (SELECT u.userid, u.surname, u.othernames, u.dob, u.gender, s.matricule, s.doe, s.pob, s.sstatus, st.descript, c.cname, c.classid, c.abbreviation AS cabbrev
+                    FROM users u INNER JOIN students s ON u.userId = s.userId
+                    INNER JOIN classrooms c ON s.classid = c.classid 
+                    INNER JOIN studentstatuses st ON s.sstatus = st.sstatus
+                    WHERE u.orgid=v_orgid AND u.usertype='student' AND is_system_user(u.username)=0
+                                        AND u.deleted=FALSE AND u.userid=in_userid) AS t);
+
+    IF v_details IS NULL THEN
+        v_details := '[]';
+    END IF;
+
+    v_year := (SELECT json_agg(m) FROM (SELECT startdate, enddate FROM academicyear WHERE yearid=active_year(v_orgid)) AS m);
+
+    IF v_year IS NULL THEN
+        v_year := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":', v_fees ,', "details":', v_details ,', "calendar": ', v_year ,'}}');
 
     CALL log_activity('fees','view',in_connid,CONCAT('Fetched. For student:',in_userid),TRUE);
 
