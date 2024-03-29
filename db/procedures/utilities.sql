@@ -458,7 +458,7 @@ END; $$;
 -- Verifies if a year is active
 DROP FUNCTION IF EXISTS is_active_year;
 
-CREATE OR REPLACE FUNCTION is_active_year(in_yearid INTEGER) RETURNS INTEGER LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION is_active_year(in_yearid INTEGER) RETURNS BOOLEAN LANGUAGE plpgsql
 AS $$
 BEGIN
 	RETURN EXISTS(SELECT * FROM academicyear WHERE startdate <= CURRENT_DATE AND enddate >= CURRENT_DATE AND yearid = in_yearid);
@@ -494,7 +494,7 @@ DECLARE
     v_termid INTEGER DEFAULT NULL;
 BEGIN
 	v_termid := (SELECT termid FROM academicterm WHERE enddate >= CURRENT_DATE AND yearid=in_yearid);
-    RETURN CASE v_termid WHEN NULL THEN 0 ELSE v_termid END;
+    RETURN CASE WHEN v_termid IS NULL THEN 0 ELSE v_termid END;
 END; $$;
 
 -- Verifies if a year is active

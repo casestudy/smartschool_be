@@ -2205,6 +2205,202 @@ app.all('/modifyyear', (req, res) => {
 	});
 });
 
+// create year
+app.all('/createterm', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let start = '';
+	let end = '';
+	let ttype = '';
+	let yearid = '';
+	let locale = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('start') || req.body.hasOwnProperty('start')) {
+		start = req.query.hasOwnProperty('start') ? req.query["start"] : req.body["start"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- start"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('end') || req.body.hasOwnProperty('end')) {
+		end = req.query.hasOwnProperty('end') ? req.query["end"] : req.body["end"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- end"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('ttype') || req.body.hasOwnProperty('ttype')) {
+		ttype = req.query.hasOwnProperty('ttype') ? req.query["ttype"] : req.body["ttype"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- ttype"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('yearid') || req.body.hasOwnProperty('yearid')) {
+		yearid = req.query.hasOwnProperty('yearid') ? req.query["yearid"] : req.body["yearid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- yearid"));
+		return;
+	}
+	
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+
+	const query = 'SELECT createacademicterm('+ mysql.escape(connid)+','+mysql.escape(start)+','+mysql.escape(end)+','+mysql.escape(ttype)+ ',' +  mysql.escape(yearid)+','+mysql.escape(locale)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("createacademicterm",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["createacademicterm"]);
+			con.end();
+		}
+	});
+});
+
+// create year
+app.all('/modifyterm', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let start = '';
+	let end = '';
+	let ttype = '';
+	let termid = '';
+	let locale = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('start') || req.body.hasOwnProperty('start')) {
+		start = req.query.hasOwnProperty('start') ? req.query["start"] : req.body["start"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- start"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('end') || req.body.hasOwnProperty('end')) {
+		end = req.query.hasOwnProperty('end') ? req.query["end"] : req.body["end"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- end"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('ttype') || req.body.hasOwnProperty('ttype')) {
+		ttype = req.query.hasOwnProperty('ttype') ? req.query["ttype"] : req.body["ttype"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- ttype"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('termid') || req.body.hasOwnProperty('termid')) {
+		termid = req.query.hasOwnProperty('termid') ? req.query["termid"] : req.body["termid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- termid"));
+		return;
+	}
+	
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+
+	const query = 'SELECT modifyacademicterm('+ mysql.escape(connid)+ ','+mysql.escape(termid)+','+mysql.escape(start)+','+mysql.escape(end)+','+mysql.escape(locale)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("modifyacademicterm",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["modifyacademicterm"]);
+			con.end();
+		}
+	});
+});
+
+
+// Get all academic terms
+app.all('/getterms', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let yearid = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('yearid') || req.body.hasOwnProperty('yearid')) {
+		yearid = req.query.hasOwnProperty('yearid') ? req.query["yearid"] : req.body["yearid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- yearid"));
+		return;
+	}
+	
+	const query = 'SELECT getacademicterms('+ mysql.escape(connid)+','+ mysql.escape(yearid)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("getacademictermss",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["getacademicterms"]);
+			con.end();
+		}
+	});
+});
+
+app.all('/gettermtypes', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+	
+	const query = 'SELECT gettermtypes('+ mysql.escape(connid)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("gettermtypes",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["gettermtypes"]);
+			con.end();
+		}
+	});
+});
+
 // Get all class teachers and subjects
 app.all('/getclassroomteachers', (req, res) => { 
 	const con = new Client(conndetails);
