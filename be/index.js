@@ -3040,7 +3040,7 @@ app.all('/getstudentfees', (req, res) => {
 					header['details'] = result.result.details;  
 					header['year'] = year;
 					
-					axios.post('http://localhost:5000/studentreceipts', { data: JSON.stringify(header) }).then((response) => {
+					axios.post('http://localhost:6000/studentreceipts', { data: JSON.stringify(header) }).then((response) => {
 						if (!response.data.error) {
 							const bitmap = fs.readFileSync(`./uploads/studentreceipts/${currentyear}/${sname}.pdf`, 'base64');
 							res.send(`{"error":false,"data":"${bitmap}"}`);
@@ -3538,17 +3538,21 @@ app.all('/getclassroomstudents', (req, res) => {
 					const start = new Date(result.result.calendar[0].startdate).getFullYear();
 					const end = new Date(result.result.calendar[0].enddate).getFullYear();
 
-					const year = start + " / " + end ;
+					const year = start + " - " + end ;
 					const cname = result.result.details[0].cname;
 					header['items'] = result.result.value;	
 					header['details'] = cname;  
 					header['year'] = year;
 					
-					axios.post('http://localhost:5000/classlist', { data: JSON.stringify(header) }).then((response) => {
+					axios.post('http://localhost:6000/classlist', { data: JSON.stringify(header) }).then((response) => {
+						console.log(response.data.error);
 						if (!response.data.error) {
-							const bitmap = fs.readFileSync(`./uploads/classlists/${cname}.pdf`, 'base64');
+							let clname = cname.replace(/ /g, "_");
+							const bitmap = fs.readFileSync(`./uploads/classlists/${year}/${clname}.pdf`, 'base64');
 							res.send(`{"error":false,"data":"${bitmap}"}`);
-						}	
+						} else {
+							res.send(response.data);
+						}
 					}).catch((err) => { 
 						res.send(utils.sendErrorMessage("",453,err.code + ' on ' + err.port));
 					});
