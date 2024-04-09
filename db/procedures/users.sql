@@ -99,7 +99,7 @@ BEGIN
     IF in_type = 'administrator' THEN
         CALL verifyprivilege(in_connId, 'ADDADMIN');
     ELSEIF in_type = 'teacher' THEN
-        CALL verifyprivilege(in_connId, 'ADDATEACH');
+        CALL verifyprivilege(in_connId, 'ADDTEACH');
     ELSEIF in_type = 'student' THEN
         CALL verifyprivilege(in_connId, 'ADDSTUDS');
     ELSEIF in_type = 'parent' THEN
@@ -131,7 +131,7 @@ BEGIN
 
     IF in_type = 'teacher' THEN
         v_role := (SELECT roleid FROM roles WHERE rname = 'teacher') ;
-        INSERT INTO userroles (userid, roleid) VALUES (v_userid, v_role);
+        INSERT INTO userroles (userid, roleid) VALUES (v_uid, v_role);
     END IF;
 
     v_users := (SELECT json_agg(t) FROM (SELECT u.userId, u.orgId, u.username, u.surname, u.othernames, u.emailaddress, u.phonenumber, u.position, u.dob, u.gender, u.locale, u.onIdle
