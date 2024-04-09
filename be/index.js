@@ -1233,7 +1233,6 @@ app.all('/addrolestouser', (req, res) => {
 		return;
 	}
 
-	console.log(JSON.stringify(roleids));
 	const query = 'SELECT addrolestouser(' + mysql.escape(connid) + ',' + mysql.escape(userid) + ',\'' + JSON.stringify(roleids) + '\')';
 
 	con.query(query, (err, rows) => {
@@ -2712,7 +2711,6 @@ app.all('/addteachersubjects', (req, res) => {
 	
 	const query = 'SELECT addteacherclassrooms('+ mysql.escape(connid)+',\''+JSON.stringify(classids)+'\','+mysql.escape(userid)+','+mysql.escape(subjectid)+','+mysql.escape(locale)+')';
 
-	console.log(query);
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
@@ -2854,7 +2852,6 @@ app.all('/createstudent', (req, res) => {
 			con.end();
 			res.send(utils.sendErrorMessage("addstudent",err.code,err.message));
 		} else {
-			console.log(rows);
 			res.send(rows.rows[0]["addstudent"]);
 			con.end();
 		}
@@ -2957,7 +2954,6 @@ app.all('/modifystudent', (req, res) => {
 			con.end();
 			res.send(utils.sendErrorMessage("editstudent",err.code,err.message));
 		} else {
-			console.log(rows);
 			res.send(rows.rows[0]["editstudent"]);
 			con.end();
 		}
