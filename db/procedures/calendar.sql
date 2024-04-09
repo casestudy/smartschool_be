@@ -225,6 +225,36 @@ BEGIN
     RETURN au;
 END; $$;
 
+-- Fetches all exam types
+DROP FUNCTION IF EXISTS getexamtypes;
+CREATE OR REPLACE FUNCTION getexamtypes (IN in_connid VARCHAR(128)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_usertype VARCHAR(20);
+    v_etypes JSON;
+    au VARCHAR(9216);
+BEGIN
+    CALL log_activity('years','view',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'VIEWEXAM');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+
+    v_etypes := (SELECT json_agg(t) FROM (SELECT name, descript FROM examtypes ORDER BY name ASC) AS t);
+
+    IF v_etypes IS NULL THEN
+        v_etypes := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_etypes,'}}');
+
+    CALL log_activity('etypes','view',in_connid,CONCAT('Fetched. For org:',v_orgid),TRUE);
+
+    RETURN au;
+END; $$;
+
 -- Create new academic year
 DROP FUNCTION IF EXISTS createacademicterm;
 CREATE OR REPLACE FUNCTION createacademicterm (IN in_connid VARCHAR(128), IN in_startdate DATE, IN in_enddate DATE, IN in_ttype VARCHAR(255), IN in_yearid INTEGER, IN in_locale CHAR(2)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
@@ -392,4 +422,170 @@ BEGIN
     CALL log_activity('terms','edit',in_connid,CONCAT('Modify for term:',in_termid),TRUE);
 
     RETURN au;
+END; $$;
+
+-- Fetches all sequences
+DROP FUNCTION IF EXISTS getexaminations;
+CREATE OR REPLACE FUNCTION getexaminations(IN in_connid VARCHAR(128), IN in_termid INTEGER) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_usertype VARCHAR(20);
+    v_terms JSON;
+    au VARCHAR(9216);
+BEGIN
+    CALL log_activity('exams','view',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'VIEWEXAM');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+
+    v_terms := (SELECT json_agg(t) FROM (SELECT ex.examid, ex.startdate, ex.enddate, ex.closed, ex.term, et.name, et.descript FROM examinations ex JOIN examtypes et ON et.name = ex.examtype WHERE ex.term = in_termid ORDER BY ex.enddate DESC) AS t);
+
+    IF v_terms IS NULL THEN
+        v_terms := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_terms,'}}');
+
+    CALL log_activity('exams','view',in_connid,CONCAT('Fetched. For term:',in_termid),TRUE);
+
+    RETURN au;
+END; $$;
+
+-- Creates an examination
+DROP FUNCTION IF EXISTS createexam;
+CREATE OR REPLACE FUNCTION createexam(IN in_connid VARCHAR(128), IN in_startdate DATE,IN in_enddate DATE, IN in_etype VARCHAR(5), IN in_locale CHAR(2)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_usertype VARCHAR(20);
+    v_termstartdate DATE;
+    v_termenddate DATE;
+    v_termid INTEGER;
+    v_termcount INTEGER;
+    v_examid INTEGER;
+    v_error VARCHAR(255);
+    au VARCHAR(9216);
+BEGIN
+    CALL log_activity('exams','add',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'ADDEXAM');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+
+    v_termid := active_term(active_year(v_orgid));
+
+    IF NOT EXISTS(SELECT * FROM students WHERE sstatus NOT IN ('dismissed','graduate')) THEN
+        v_error := (SELECT fetchError(in_locale,'calExamNoStudent')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_startdate <  CURRENT_DATE THEN
+        v_error := (SELECT fetchError(in_locale,'calExamStartPast')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_enddate <  CURRENT_DATE THEN
+        v_error := (SELECT fetchError(in_locale,'calExamEndPast')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_startdate >= in_enddate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamEndB4Start')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF v_termid = 0 THEN
+		v_error := (SELECT fetchError(in_locale,'calExamNoActTerm')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF active_exam(v_termid) <> 0 THEN
+		v_error := (SELECT fetchError(in_locale,'calExamStartPrevAct')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_termstartdate := (SELECT startdate FROM academicterm WHERE termid = v_termid) ;
+    v_termenddate := (SELECT enddate FROM academicterm WHERE termid = v_termid) ;
+
+    IF in_startdate < v_termstartdate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamStartB4TermStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_enddate > v_termenddate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamEndA4TermStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_termcount := (SELECT COUNT(*) FROM examinations WHERE term = v_termid);
+    IF v_termcount < 2 THEN
+        INSERT INTO examinations (startdate, enddate, examtype, term, orgid) VALUES (in_startdate, in_enddate, in_etype, v_termid, v_orgid) RETURNING examid INTO v_examid;
+        CALL setdefaultmarksforexamination(in_connid, v_examid, in_locale);
+    ELSE 
+        v_error := (SELECT fetchError(in_locale,'calExamLimit2')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":"ok"}}');
+
+    CALL log_activity('exams','add',in_connid,CONCAT('Created for term:',v_termid),TRUE);
+
+    RETURN au;
+END; $$;
+
+DROP PROCEDURE IF EXISTS setdefaultmarksforexamination;
+CREATE OR REPLACE PROCEDURE setdefaultmarksforexamination(IN in_connid VARCHAR(128), IN in_examid INTEGER, IN in_locale CHAR(2)) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_classrooms JSON;
+    v_classsubjects JSON;
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    i INTEGER;
+    j INTEGER;
+    v_yearid INTEGER;
+    v_error VARCHAR(255);
+BEGIN
+    CALL log_activity('classrooms','setDefaultMarks',in_connid,CONCAT('_H:',in_connid),FALSE);
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+    v_yearid := active_year(v_orgid);
+
+    v_classrooms := (SELECT json_agg(t) FROM (SELECT c.classid, cs.subjectid FROM classrooms c JOIN classsubjects cs ON c.classid = cs.classid WHERE c.orgid = v_orgid AND cs.yearid = v_yearid) AS t); -- Get all classrooms
+    IF  JSON_ARRAY_LENGTH(v_classrooms) > 0 THEN
+        FOR i IN SELECT * FROM JSON_ARRAY_ELEMENTS(v_classrooms)
+        LOOP 
+           CALL setdefaultmarks(i->>'classid', i->>'subjectid', in_examid);
+        END LOOP;
+    ELSE
+        v_error := (SELECT fetchError(in_locale,'calExamNoClassTeachers')) ;
+        RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+END; $$;
+
+DROP PROCEDURE IF EXISTS setdefaultmarks;
+CREATE OR REPLACE PROCEDURE setdefaultmarks(IN in_classid INTEGER, IN in_subjectid INTEGER, IN in_examid INTEGER) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_student JSON;
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    i INTEGER;
+    v_yearid INTEGER;
+    v_error VARCHAR(255);
+BEGIN
+    v_student := (SELECT json_agg(userid) FROM students s JOIN classsubjects cs ON s.classid = cs.classid WHERE cs.classid = in_classid AND s.status NOT IN ('dismissed','graduate')); -- Get the students subject
+    IF JSON_ARRAY_ELEMENTS(v_student) > 0 THEN
+        FOR i IN SELECT * FROM JSON_ARRAY_ELEMENTS(v_student)
+        LOOP
+            IF NOT EXISTS(SELECT * FROM examresults WHERE userid = i AND subjectid = in_subjectid AND examid = in_examid) THEN
+                INSERT INTO examresults (userid, subjectid, examid, mark) VALUES (i, in_subjectid, in_examid, 0.00); 
+            END IF;
+        END LOOP;
+    END IF;
 END; $$;
