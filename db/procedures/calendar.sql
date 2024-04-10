@@ -590,3 +590,82 @@ BEGIN
         END LOOP;
     END IF;
 END; $$;
+
+-- Creates an examination
+DROP FUNCTION IF EXISTS modifyexam;
+CREATE OR REPLACE FUNCTION modifyexam(IN in_connid VARCHAR(128), IN in_examid INTEGER, IN in_startdate DATE,IN in_enddate DATE, IN in_etype VARCHAR(5), IN in_locale CHAR(2)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_usertype VARCHAR(20);
+    v_termstartdate DATE;
+    v_termenddate DATE;
+    v_termid INTEGER;
+    v_termcount INTEGER;
+    v_examid INTEGER;
+    v_error VARCHAR(255);
+    v_exams JSON;
+    au VARCHAR(9216);
+BEGIN
+    CALL log_activity('exams','add',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'ADDEXAM');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+
+    v_termid := active_term(active_year(v_orgid));
+
+    IF in_enddate <  CURRENT_DATE THEN
+        v_error := (SELECT fetchError(in_locale,'calExamEndPast')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_startdate >= in_enddate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamEndB4Start')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF v_termid = 0 THEN
+		v_error := (SELECT fetchError(in_locale,'calExamNoActTerm')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF is_active_exam(in_examid) IS FALSE THEN
+		v_error := (SELECT fetchError(in_locale,'calExamModLnGone')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_termstartdate := (SELECT startdate FROM academicterm WHERE termid = v_termid) ;
+    v_termenddate := (SELECT enddate FROM academicterm WHERE termid = v_termid) ;
+
+    IF in_startdate < v_termstartdate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamStartB4TermStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF in_enddate > v_termenddate THEN
+		v_error := (SELECT fetchError(in_locale,'calExamEndA4TermStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_termcount := (SELECT COUNT(*) FROM examinations WHERE term = v_termid);
+    IF v_termcount < 2 THEN
+        UPDATE examinations SET startdate = in_startdate, enddate = in_enddate, examtype = in_etype WHERE examid = in_examid;
+    ELSE 
+        v_error := (SELECT fetchError(in_locale,'calExamLimit2')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+
+    v_exams := (SELECT json_agg(t) FROM (SELECT ex.examid, ex.startdate, ex.enddate, ex.closed, ex.term, et.name, et.descript FROM examinations ex JOIN examtypes et ON et.name = ex.examtype WHERE ex.term = v_termid ORDER BY ex.enddate DESC) AS t);
+
+    IF v_exams IS NULL THEN
+        v_exams := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_exams,'}}');
+
+    CALL log_activity('exams','add',in_connid,CONCAT('Created for term:',v_termid),TRUE);
+
+    RETURN au;
+END; $$;

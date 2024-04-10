@@ -2470,7 +2470,6 @@ app.all('/createexam', (req, res) => {
 	let start = '';
 	let end = '';
 	let etype = '';
-	let termid = '';
 	let locale = '';
 
 	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
@@ -2516,6 +2515,73 @@ app.all('/createexam', (req, res) => {
 			res.send(utils.sendErrorMessage("createexam",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["createexam"]);
+			con.end();
+		}
+	});
+});
+
+//Creating examination
+app.all('/modifyexam', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let start = '';
+	let end = '';
+	let etype = '';
+	let examid = '';
+	let locale = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('examid') || req.body.hasOwnProperty('examid')) {
+		examid = req.query.hasOwnProperty('termid') ? req.query["termid"] : req.body["examid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- examid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('start') || req.body.hasOwnProperty('start')) {
+		start = req.query.hasOwnProperty('start') ? req.query["start"] : req.body["start"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- start"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('end') || req.body.hasOwnProperty('end')) {
+		end = req.query.hasOwnProperty('end') ? req.query["end"] : req.body["end"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- end"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('etype') || req.body.hasOwnProperty('etype')) {
+		etype = req.query.hasOwnProperty('etype') ? req.query["etype"] : req.body["etype"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- etype"));
+		return;
+	}
+	
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+	
+	const query = 'SELECT modifyexam('+ mysql.escape(connid) + ',' + mysql.escape(examid) + ',' + mysql.escape(start) + ',' + mysql.escape(end) + ',' + mysql.escape(etype) + ',' + mysql.escape(locale) +')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("modifyexam",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["modifyexam"]);
 			con.end();
 		}
 	});
