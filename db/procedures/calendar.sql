@@ -364,11 +364,6 @@ BEGIN
     v_userid := connid2userid(in_connid);
 	v_orgid := userid2orgid(v_userid);
 
-    IF in_startdate <  CURRENT_DATE THEN
-        v_error := (SELECT fetchError(in_locale,'calTermStartPast')) ;
-		RAISE EXCEPTION '%', v_error USING HINT = v_error;
-	END IF;
-
     IF in_enddate <  CURRENT_DATE THEN
         v_error := (SELECT fetchError(in_locale,'calTermEndPast')) ;
 		RAISE EXCEPTION '%', v_error USING HINT = v_error;
@@ -432,7 +427,7 @@ DECLARE
     v_userid INTEGER;
     v_orgid INTEGER;
     v_usertype VARCHAR(20);
-    v_terms JSON;
+    v_exams JSON;
     au VARCHAR(9216);
 BEGIN
     CALL log_activity('exams','view',in_connid,CONCAT('_H:',in_connid),FALSE);
@@ -441,13 +436,13 @@ BEGIN
     v_userid := connid2userid(in_connid);
 	v_orgid := userid2orgid(v_userid);
 
-    v_terms := (SELECT json_agg(t) FROM (SELECT ex.examid, ex.startdate, ex.enddate, ex.closed, ex.term, et.name, et.descript FROM examinations ex JOIN examtypes et ON et.name = ex.examtype WHERE ex.term = in_termid ORDER BY ex.enddate DESC) AS t);
+    v_exams := (SELECT json_agg(t) FROM (SELECT ex.examid, ex.startdate, ex.enddate, ex.closed, ex.term, et.name, et.descript FROM examinations ex JOIN examtypes et ON et.name = ex.examtype WHERE ex.term = in_termid ORDER BY ex.enddate DESC) AS t);
 
-    IF v_terms IS NULL THEN
-        v_terms := '[]';
+    IF v_exams IS NULL THEN
+        v_exams := '[]';
     END IF;
 
-    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_terms,'}}');
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_exams,'}}');
 
     CALL log_activity('exams','view',in_connid,CONCAT('Fetched. For term:',in_termid),TRUE);
 
@@ -468,6 +463,7 @@ DECLARE
     v_termcount INTEGER;
     v_examid INTEGER;
     v_error VARCHAR(255);
+    v_exams JSON;
     au VARCHAR(9216);
 BEGIN
     CALL log_activity('exams','add',in_connid,CONCAT('_H:',in_connid),FALSE);
@@ -530,7 +526,13 @@ BEGIN
 		RAISE EXCEPTION '%', v_error USING HINT = v_error;
     END IF;
 
-    au := CONCAT('{"error":false,"result":{"status":200,"value":"ok"}}');
+    v_exams := (SELECT json_agg(t) FROM (SELECT ex.examid, ex.startdate, ex.enddate, ex.closed, ex.term, et.name, et.descript FROM examinations ex JOIN examtypes et ON et.name = ex.examtype WHERE ex.term = v_termid ORDER BY ex.enddate DESC) AS t);
+
+    IF v_exams IS NULL THEN
+        v_exams := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_exams,'}}');
 
     CALL log_activity('exams','add',in_connid,CONCAT('Created for term:',v_termid),TRUE);
 
@@ -545,8 +547,7 @@ DECLARE
     v_classsubjects JSON;
     v_userid INTEGER;
     v_orgid INTEGER;
-    i INTEGER;
-    j INTEGER;
+    i JSON;
     v_yearid INTEGER;
     v_error VARCHAR(255);
 BEGIN
@@ -560,7 +561,7 @@ BEGIN
     IF  JSON_ARRAY_LENGTH(v_classrooms) > 0 THEN
         FOR i IN SELECT * FROM JSON_ARRAY_ELEMENTS(v_classrooms)
         LOOP 
-           CALL setdefaultmarks(i->>'classid', i->>'subjectid', in_examid);
+           CALL setdefaultmarks((i->>'classid')::int, (i->>'subjectid')::int, in_examid);
         END LOOP;
     ELSE
         v_error := (SELECT fetchError(in_locale,'calExamNoClassTeachers')) ;
@@ -579,8 +580,8 @@ DECLARE
     v_yearid INTEGER;
     v_error VARCHAR(255);
 BEGIN
-    v_student := (SELECT json_agg(userid) FROM students s JOIN classsubjects cs ON s.classid = cs.classid WHERE cs.classid = in_classid AND s.status NOT IN ('dismissed','graduate')); -- Get the students subject
-    IF JSON_ARRAY_ELEMENTS(v_student) > 0 THEN
+    v_student := (SELECT json_agg(s.userid) FROM students s JOIN classsubjects cs ON s.classid = cs.classid WHERE cs.classid = in_classid AND cs.subjectid = in_subjectid); -- Get the students subject
+    IF JSON_ARRAY_LENGTH(v_student) > 0 THEN
         FOR i IN SELECT * FROM JSON_ARRAY_ELEMENTS(v_student)
         LOOP
             IF NOT EXISTS(SELECT * FROM examresults WHERE userid = i AND subjectid = in_subjectid AND examid = in_examid) THEN
