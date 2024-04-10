@@ -521,6 +521,14 @@ BEGIN
     RETURN CASE WHEN v_examid IS NULL THEN 0 ELSE v_examid END;
 END; $$;
 
+-- Verifies if an exam is active
+DROP FUNCTION IF EXISTS is_active_exam;
+CREATE OR REPLACE FUNCTION is_active_exam(in_examid INTEGER) RETURNS BOOLEAN LANGUAGE plpgsql
+AS $$
+BEGIN
+	RETURN EXISTS(SELECT * FROM examinations WHERE enddate >= CURRENT_DATE AND examid = in_examid);
+END; $$;
+
 -- org insert trigger
 DROP FUNCTION IF EXISTS ai_org CASCADE;
 CREATE OR REPLACE FUNCTION ai_org() RETURNS TRIGGER LANGUAGE plpgsql

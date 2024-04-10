@@ -535,6 +535,7 @@ CREATE TABLE examinations (
 	examtype VARCHAR(5) NOT NULL,
 	term INTEGER NOT NULL,
 	orgid INTEGER NOT NULL,
+	UNIQUE (orgid,term,examtype),
 	FOREIGN KEY (examtype) REFERENCES examtypes(name) ON DELETE NO ACTION,
 	FOREIGN KEY (term) REFERENCES academicterm(termid) ON DELETE NO ACTION,
 	FOREIGN KEY (orgid) REFERENCES organisations (orgid) ON DELETE NO ACTION
