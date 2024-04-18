@@ -2587,7 +2587,6 @@ app.all('/modifyexam', (req, res) => {
 	});
 });
 
-
 // Get all class teachers and subjects
 app.all('/getclassroomteachers', (req, res) => { 
 	const con = new Client(conndetails);
@@ -3750,6 +3749,60 @@ app.all('/getclassroomstudents', (req, res) => {
 		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- print"));
 		return ;
 	}
+});
+
+// Get all class teachers and subjects
+app.all('/beginsequenceentry', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let classid = '';
+	let subjectid = '';
+	let userid = '';
+	let locale = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('classid') || req.body.hasOwnProperty('classid')) {
+		classid = req.query.hasOwnProperty('classid') ? req.query["classid"] : req.body["classid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- classid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('subjectid') || req.body.hasOwnProperty('subjectid')) {
+		subjectid = req.query.hasOwnProperty('subjectid') ? req.query["subjectid"] : req.body["subjectid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- subject"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+
+	const query = 'SELECT beginsequenceentry('+mysql.escape(connid)+','+mysql.escape(locale)+','+mysql.escape(classid)+','+mysql.escape(subjectid)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("beginsequenceentry",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["beginsequenceentry"]);
+			con.end();
+		}
+	});
+
+	
 });
 
 app.listen(port, () => {

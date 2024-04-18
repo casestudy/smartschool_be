@@ -352,3 +352,66 @@ BEGIN
 
     RETURN au;
 END; $$;
+
+-- Fetches all teachers in a class
+DROP FUNCTION IF EXISTS beginsequenceentry;
+CREATE OR REPLACE FUNCTION beginsequenceentry (IN in_connid VARCHAR(128), IN in_locale VARCHAR(5), IN in_classid INTEGER, IN in_subjectId INTEGER) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_yearid INTEGER;
+    v_termid INTEGER;
+    v_examid INTEGER;
+    v_examstartdate DATE;
+    v_students JSON;
+    v_error VARCHAR(255);
+    au VARCHAR(9216);
+BEGIN
+    CALL log_activity('classrooms','beginSequence',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'BEGINEXAM');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+    v_yearid := active_year(v_orgid);
+    v_termid := active_term(v_yearid);
+    v_examid := active_exam(v_termid) ;
+
+    IF v_examid = 0 THEN
+		v_error := (SELECT fetchError(in_locale,'classAddSeqNoActExam')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_examstartdate := (SELECT startdate FROM examinations WHERE examid = v_examid) ;
+
+    IF v_examstartdate > CURRENT_DATE THEN
+		v_error := (SELECT fetchError(in_locale,'classAddSeqNotYetTime')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    IF NOT EXISTS (SELECT * FROM classsubjects WHERE userid = v_userid AND classid = in_classid AND subjectid = in_subjectid AND yearid = v_yearid) THEN
+        IF NOT EXISTS (SELECT * FROM assistances WHERE assistor = v_userid) THEN
+            v_error := (SELECT fetchError(in_locale,'classNotTeachingclass')) ;
+		    RAISE EXCEPTION '%', v_error USING HINT = v_error;
+        END IF;
+    END IF;
+
+    IF EXISTS (SELECT * FROM legacy WHERE yearid = v_yearid) THEN
+        v_error := (SELECT fetchError(in_locale,'classAddSeqStudPromAlr')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+
+    v_students := (SELECT json_agg(t) FROM (SELECT u.userid, u.surname, u.othernames, er.mark  FROM examresults er 
+                    JOIN users u ON u.userid = er.userid JOIN students s ON u.userid = s.userid 
+                    WHERE er.subjectid = in_subjectid AND s.classid = in_classid AND er.examid = v_examid ) AS t);
+
+    IF v_students IS NULL THEN
+        v_students := '[]';
+    END IF;
+
+    au := CONCAT('{"error":false,"result":{"status":200,"value":',v_students,'}}');
+
+    CALL log_activity('classrooms','beginSequence',in_connid,CONCAT('Prepared sequence entry for class=',in_classid,',subject=',in_subjectid,',user=',v_userid),TRUE);
+
+    RETURN au;
+END; $$;

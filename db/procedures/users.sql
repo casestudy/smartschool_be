@@ -37,10 +37,20 @@ BEGIN
 
         v_userid := connid2userid(in_connid);
 	    v_orgid := userid2orgid(v_userid);
+        v_usertype := (SELECT usertype FROM users where userid = v_userid);
 
-        v_users := (SELECT json_agg(t) FROM (SELECT u.userId, u.orgId, u.username, u.surname, u.othernames, u.emailaddress, u.phonenumber, u.position ,u.dob, u.gender, u.locale, u.onIdle
-	  		FROM users u
-	  		WHERE u.orgid=v_orgid AND u.usertype IN ('teacher','hybrid1','hybrid2','hybrid4') AND is_system_user(u.username)=0 AND u.deleted=FALSE AND u.userid<>v_userid) AS t);
+        IF v_usertype = 'administrator' THEN
+            v_users := (SELECT json_agg(t) FROM (SELECT u.userId, u.orgId, u.username, u.surname, u.othernames, u.emailaddress, u.phonenumber, u.position ,u.dob, u.gender, u.locale, u.onIdle
+	  		    FROM users u
+	  		    WHERE u.orgid=v_orgid AND u.usertype IN ('teacher','hybrid1','hybrid2','hybrid4') AND is_system_user(u.username)=0 AND u.deleted=FALSE) AS t);
+        ELSIF v_usertype = 'teacher' THEN
+            v_users := (SELECT json_agg(t) FROM (SELECT u.userId, u.orgId, u.username, u.surname, u.othernames, u.emailaddress, u.phonenumber, u.position ,u.dob, u.gender, u.locale, u.onIdle
+	  		    FROM users u
+	  		    WHERE u.orgid=v_orgid AND u.usertype IN ('teacher','hybrid1','hybrid2','hybrid4') AND is_system_user(u.username)=0 AND u.deleted=FALSE AND u.userid = v_userid) AS t);
+        ELSE
+            v_error := (SELECT fetchError(in_locale,'loginGoAway')) ;
+		    RAISE EXCEPTION '%', v_error USING HINT = v_error;
+        END IF;
 
         IF v_users IS NULL THEN
             v_users := '[]';
