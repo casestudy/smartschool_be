@@ -386,7 +386,6 @@ app.all('/createuser', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("adduser",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["adduser"]);
@@ -516,7 +515,6 @@ app.all('/modifyuser', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("edituser",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["edituser"]);
@@ -552,7 +550,6 @@ app.all('/getuserroles', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("getuserroles",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["getuserroles"]);
@@ -580,7 +577,6 @@ app.all('/getallroles', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("getallroles",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["getallroles"]);
@@ -624,7 +620,6 @@ app.all('/createrole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("createrole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["createrole"]);
@@ -676,7 +671,6 @@ app.all('/updaterole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("updaterole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["updaterole"]);
@@ -712,7 +706,6 @@ app.all('/removerole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("removerole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removerole"]);
@@ -748,7 +741,6 @@ app.all('/getroleperms', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("getrolepermissions",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["getrolepermissions"]);
@@ -796,7 +788,6 @@ app.all('/removeprivsfromrole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("removeprivilegesfromrole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removeprivilegesfromrole"]);
@@ -824,7 +815,6 @@ app.all('/getpermtypes', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("getpermissiontypes",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["getpermissiontypes"]);
@@ -868,7 +858,6 @@ app.all('/addprivtorole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("addaddprivilegetorole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["addprivilegetorole"]);
@@ -916,7 +905,6 @@ app.all('/addprivstorole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("addaddprivilegestorole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["addprivilegestorole"]);
@@ -960,7 +948,6 @@ app.all('/removeprivfromrole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("removeprivilegefromrole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removeprivilegefromrole"]);
@@ -996,7 +983,6 @@ app.all('/getsubroles', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("getrolesubroles",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["getrolesubroles"]);
@@ -1048,7 +1034,6 @@ app.all('/addroletorole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("addroletorole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["addroletorole"]);
@@ -1097,7 +1082,6 @@ app.all('/addrolestorole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("addrolestorole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["addrolestorole"]);
@@ -1141,7 +1125,6 @@ app.all('/removerolefromrole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err.message);
 			res.send(utils.sendErrorMessage("removerolefromrole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removerolefromrole"]);
@@ -1189,7 +1172,6 @@ app.all('/removerolesfromrole', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("removerolesfromrole",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removerolesfromrole"]);
@@ -1238,7 +1220,6 @@ app.all('/addrolestouser', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("addrolestouser",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["addrolestouser"]);
@@ -1400,7 +1381,6 @@ app.all('/removeuserroles', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("removeuserroles",err.code,err.message));
 		} else {
 			res.send(rows.rows[0]["removeuserroles"]);
@@ -1441,7 +1421,6 @@ app.get('/resetupass', (req, res) => {
 	con.query(query, (err, rows) => {
 		if (err) {
 			con.end();
-			console.log(err);
 			res.send(utils.sendErrorMessage("resetuserpassword",err.code,err.message));
 		} else {
 			res.send(utils.sendSuccessMessage());
@@ -3728,7 +3707,6 @@ app.all('/getclassroomstudents', (req, res) => {
 					header['year'] = year;
 					
 					axios.post('http://localhost:6000/classlist', { data: JSON.stringify(header) }).then((response) => {
-						console.log(response.data.error);
 						if (!response.data.error) {
 							let clname = cname.replace(/ /g, "_");
 							const bitmap = fs.readFileSync(`./uploads/classlists/${year}/${clname}.pdf`, 'base64');
@@ -3801,8 +3779,67 @@ app.all('/beginsequenceentry', (req, res) => {
 			con.end();
 		}
 	});
+});
 
+// Submit sequence marks
+app.all('/submitmarks', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let classid = '';
+	let subjectid = '';
+	let userid = '';
+	let locale = '';
+	let data = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('classid') || req.body.hasOwnProperty('classid')) {
+		classid = req.query.hasOwnProperty('classid') ? req.query["classid"] : req.body["classid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- classid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('subjectid') || req.body.hasOwnProperty('subjectid')) {
+		subjectid = req.query.hasOwnProperty('subjectid') ? req.query["subjectid"] : req.body["subjectid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- subject"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+
+	if(req.query.hasOwnProperty('data') || req.body.hasOwnProperty('data')) {
+		data = req.query.hasOwnProperty('data') ? req.query["data"] : req.body["data"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- data"));
+		return ;
+	}
 	
+	const query = 'SELECT submitsequencemarks('+mysql.escape(connid)+','+mysql.escape(locale)+','+mysql.escape(classid)+','+mysql.escape(subjectid)+','+mysql.escape(data)+')';
+
+	con.query(query, (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("submitsequencemarks",err.code,err.message));
+		} else {
+			res.send(rows.rows[0]["submitsequencemarks"]);
+			con.end();
+		}
+	});
+
 });
 
 app.listen(port, () => {
