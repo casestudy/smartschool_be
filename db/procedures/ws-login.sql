@@ -222,7 +222,7 @@ BEGIN
             v_count := (SELECT COUNT(*) FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid)));
 
 			IF v_count > 0 THEN
-				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termtype,'"}');
+				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termdescription,'"}');
 			END IF;
 		END IF;
 
@@ -246,14 +246,14 @@ BEGIN
             v_count := (SELECT COUNT(*) FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid)));
 
 			IF v_count > 0 THEN
-				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termtype,'"}');
+				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termdescription,'"}');
 			END IF;
 		END IF;
 
         details := CONCAT(details, ']') ;
         RETURN details ;
     ELSE
-        v_error := (SELECT fetchError(locale,'loginGoAway')) ;
+        v_error := (SELECT fetchError(in_locale,'loginGoAway')) ;
 		RAISE EXCEPTION '%', v_error USING HINT = v_error;
     END IF;
 END; $$;
