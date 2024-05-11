@@ -518,6 +518,11 @@ DECLARE
     v_subject_details JSON;
     v_calendar_details JSON;
     v_classroom_details JSON;
+    v_groups JSON;
+    v_group JSON;
+    v_group_details JSON;
+    v_groups_length INTEGER;
+    l INTEGER;
     v_error VARCHAR(255);
     report_card VARCHAR(9216);
 BEGIN
@@ -572,18 +577,51 @@ BEGIN
                 v_exam := v_exams->k ;
                 report_card := CONCAT(report_card, '['); -- We open the array of current exam
 
-                v_exammarks := (SELECT json_agg(t) FROM (SELECT mark, subjectid FROM examresults WHERE userid = (v_student->>'userid')::int AND examid = (v_exam->>'examid')::int) AS t);
-                v_exammark_length := JSON_ARRAY_LENGTH(v_exammarks);
+                -- We need to build array of groups
 
-                FOR m IN 0..v_exammark_length - 1
+                v_groups := (SELECT json_agg(t) FROM (SELECT groupid FROM groups WHERE academicyearid = v_yearid) AS t);
+                v_groups_length := JSON_ARRAY_LENGTH(v_groups);
+
+                FOR l IN 0..v_groups_length - 1
                 LOOP
-                    v_exammark := v_exammarks->m;
+                    v_group := v_groups->l ;
+                    report_card := CONCAT(report_card, '['); -- We open the array of current group
 
-                    v_teacherid := (SELECT userid FROM classsubjects WHERE classid = in_classid AND subjectid = (v_exammark->>'subjectid')::int AND yearid = v_yearid);
-                    IF m = v_exammark_length - 1 THEN
-                        report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'}'); -- We add the current mar and its the last
+                    v_exammarks := (SELECT json_agg(t) FROM (SELECT er.mark, er.subjectid FROM examresults er JOIN groupings gr ON er.subjectid = gr.subjectid WHERE gr.groupid = (v_group->>'groupid')::int AND er.userid = (v_student->>'userid')::int AND er.examid = (v_exam->>'examid')::int) AS t);
+                    v_exammark_length := JSON_ARRAY_LENGTH(v_exammarks);
+
+                    report_card := CONCAT(report_card, '['); -- We open the array of current group marks
+
+                    FOR m IN 0..v_exammark_length - 1
+                    LOOP
+                        v_exammark := v_exammarks->m;
+
+                        v_teacherid := (SELECT userid FROM classsubjects WHERE classid = in_classid AND subjectid = (v_exammark->>'subjectid')::int AND yearid = v_yearid);
+                        IF m = v_exammark_length - 1 THEN
+                            report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'}'); -- We add the current mark and its the last
+                        ELSE
+                            report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'},'); -- We add the current mark
+                        END IF;
+                    END LOOP;
+
+                    report_card := CONCAT(report_card, ']'); -- We close the array of current group marks
+
+                    v_group_details := (SELECT json_agg(t) FROM (
+                                    SELECT groupid, gname 
+                                    FROM groups
+                                    WHERE groupid = (v_group->>'groupid')::int 
+                                    ) AS t);
+
+                    IF v_group_details IS NULL THEN
+                        v_group_details := '[]';
+                    END IF;
+
+                    report_card := CONCAT(report_card, ',', v_group_details); -- We append the group details
+
+                    IF l = v_groups_length - 1 THEN
+                        report_card := CONCAT(report_card, ']'); -- We close the array of current group
                     ELSE
-                        report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'},'); -- We add the current mark
+                        report_card := CONCAT(report_card, '],'); -- We close the array of current group and can add another term
                     END IF;
                 END LOOP;
 
