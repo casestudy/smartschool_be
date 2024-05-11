@@ -9,6 +9,7 @@ import ReactPDF, {
     Image
 } from "@react-pdf/renderer";
 import SequenceDetails from '../tables/reportcard/sequenceDetails';
+import StudentDetails from '../tables/reportcard/studentDetails';
 
 type TemplateData = {
     name_en: string;
@@ -17,6 +18,7 @@ type TemplateData = {
     box_fr: string;
     student_details: any;
     calendar_details: any;
+    classroom_details: any;
     details: string;
     year: string;
 };
@@ -164,6 +166,7 @@ const PDF = ({ data }: PDFProps) => {
                                 <Text style={styles.paragraph1}>{data.box_en}</Text>
                             </View>
                         </View>
+                        <StudentDetails student={entry[1]} classroom={data.classroom_details} total={data.student_details.length}/>
                     </View>
                 </Page>
             ))}

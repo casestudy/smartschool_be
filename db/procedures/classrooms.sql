@@ -546,7 +546,7 @@ BEGIN
 
     report_card := CONCAT(report_card, '['); -- We open the array of all students
 
-    v_students := (SELECT json_agg(t) FROM (SELECT s.userid FROM students s JOIN users u ON u.userid = s.userid  WHERE s.classid = in_classid AND u.deleted = FALSE AND s.sstatus NOT IN ('dismissed','graduate') AND s.userid NOT IN (SELECT userid FROM legacy WHERE yearid=v_yearid AND classid <> in_classid)) AS t);
+    v_students := (SELECT json_agg(t) FROM (SELECT s.userid FROM students s JOIN users u ON u.userid = s.userid  WHERE s.classid = in_classid AND u.deleted = FALSE AND s.sstatus NOT IN ('dismissed','graduate') AND s.userid NOT IN (SELECT userid FROM legacy WHERE yearid=v_yearid AND classid <> in_classid) ORDER BY u.surname) AS t);
     v_student_length := json_array_length(v_students);
 
     FOR i IN 0..v_student_length-1

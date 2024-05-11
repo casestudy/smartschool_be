@@ -3524,10 +3524,18 @@ app.post('/uploadstudentphoto', upload.single("picture"), async (req, res, next)
 				con.end();
 				res.send(utils.sendErrorMessage("updatestudentpicture",err.code,err.message));
 			} else {
-				const tes = await fs.promises.open(`uploads/students/${filename}`, 'w');
-				await tes.write(req.file.buffer);
-				res.send(rows.rows[0]["updatestudentpicture"]);
-				con.end();
+				if(!fs.existsSync(`uploads/students/pictures`)) {
+					fs.mkdirSync(`uploads/students/pictures`, { recursive: true });
+				}
+				//const tes = await fs.promises.open(`/uploads/students/pictures/${filename}`, 'w');
+				try {
+					await fs.promises.writeFile(`uploads/students/pictures/${filename}`, req.file.buffer);
+					res.send(rows.rows[0]["updatestudentpicture"]);
+					con.end();
+				} catch (error) {
+					con.end();
+					res.send(utils.sendErrorMessage("",453, error.message));
+				}
 			}
 		});
 	} else {
@@ -3578,7 +3586,7 @@ app.post('/getstudentphoto',getpic.single('picture'), async (req, res, next) => 
 			if(path !== null) {
 				var extension = path.split('.')[1];
 				
-				fs.readFile(`uploads/students/${path}`, function(err, data) {
+				fs.readFile(`uploads/students/pictures/${path}`, function(err, data) {
 					if (err) {
 						res.send(utils.sendErrorMessage("getstudentpicture",err.code,err.message));
 					} else {
