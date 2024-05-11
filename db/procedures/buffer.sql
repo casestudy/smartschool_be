@@ -1,72 +1,57 @@
 \c shopman_pos;
-DROP FUNCTION IF EXISTS getdashboarddetails;
-CREATE OR REPLACE FUNCTION getdashboarddetails (IN in_userid INTEGER, IN in_locale VARCHAR(5)) RETURNS JSON LANGUAGE plpgsql
+-- Generates student's report card
+DROP FUNCTION IF EXISTS generatereportcard;
+CREATE OR REPLACE FUNCTION generatereportcard (IN in_connid VARCHAR(128), IN in_classid INTEGER,  IN in_locale VARCHAR(5)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
 AS $$
-DECLARE 
-    v_usertype VARCHAR(20);
-    v_subjectcount INTEGER;
-    v_yearenddate DATE;
-    v_yearstartdate DATE;
-    v_termstartdate DATE;
-    v_termenddate DATE;
-    v_termdescription VARCHAR(64);
-    v_count INTEGER;
-    v_studentcount INTEGER;
-    v_teachercount INTEGER;
-    v_parentcount INTEGER;
-    v_classroomcount INTEGER;
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_yearid INTEGER;
+    v_termid INTEGER;
+    v_examid INTEGER;
+    v_teacherid INTEGER;
+    v_examstartdate DATE;
+    v_students VARCHAR(9216);
+    v_terms VARCHAR(9216);
+    v_exams VARCHAR(9216);
+    v_exammarks VARCHAR(9216);
+    i JSON;
+    j JSON;
+    k JSON;
+    m JSON;
     v_error VARCHAR(255);
-    details VARCHAR(9261) DEFAULT '[';
-
+    report_card VARCHAR(9216);
 BEGIN
-    v_usertype := (SELECT userType FROM users WHERE userid=in_userid);
+    CALL log_activity('classrooms','fetchReportCards',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'VIEWCLASS');
 
-    IF v_usertype = 'teacher' THEN
-        v_subjectcount := (SELECT COUNT(*) FROM classsubjects WHERE userid=4 AND yearid=active_year(userid2orgid(in_userid))); 
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+    v_yearid := active_year(v_orgid);
+    v_termid := active_term(v_yearid);
+    v_examid := active_exam(v_termid) ;
 
-        details := CONCAT(details,'{"subjects":',v_subjectcount,'}');
-
-        IF EXISTS (SELECT startdate, enddate FROM academicyear WHERE startdate <= CURRENT_DATE AND enddate >= CURRENT_DATE AND orgid=userid2orgid(in_userid)) THEN
-			SELECT startdate, enddate INTO v_yearstartdate, v_yearenddate FROM academicyear WHERE  startdate <= CURRENT_DATE AND enddate >= CURRENT_DATE AND orgid=userid2orgid(in_userid);
-			details := CONCAT (details,',{"current_year_start":"',v_yearstartdate,'","current_year_end":"',v_yearenddate,'"}');
-
-			SELECT t.startdate, t.enddate, tt.descript INTO v_termstartdate, v_termenddate, v_termdescription FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid));
-			
-            v_count := (SELECT COUNT(*) FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid)));
-
-			IF v_count > 0 THEN
-				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termdescription,'"}');
-			END IF;
-		END IF;
-
-        details := CONCAT(details, ']') ;
-        RETURN details;
-    ELSEIF v_usertype IN ('administrator', 'system') THEN
-        v_studentcount := (SELECT COUNT(*) FROM students s JOIN users u ON u.userid=s.userid WHERE u.usertype='student' AND u.orgId=userid2orgid(in_userid));
-		v_teachercount := (SELECT COUNT(*) FROM users WHERE usertype = 'teacher' AND orgid=userid2orgid(in_userid));
-		v_parentcount := (SELECT COUNT(*) FROM users WHERE usertype = 'parent' AND orgid=userid2orgid(in_userid));
-		v_classroomcount := (SELECT COUNT(*) FROM classrooms WHERE orgid=userid2orgid(in_userid));
-		v_subjectcount := (SELECT COUNT(*) FROM subjects WHERE orgid=userid2orgid(in_userid));
-
-        details := CONCAT (details, '{"students":',v_studentCount,',"teachers":',v_teacherCount,',"parents":',v_parentCount,',"classrooms":',v_classroomCount,',"subjects":',v_subjectCount,'}');
-       
-        IF EXISTS (SELECT startdate, enddate FROM academicyear WHERE startdate <= CURRENT_DATE AND enddate >= CURRENT_DATE AND orgid=userid2orgid(in_userid)) THEN
-			SELECT y.startdate, y.enddate INTO v_yearstartdate, v_yearenddate FROM academicyear y WHERE y.startdate <= CURRENT_DATE AND y.enddate >= CURRENT_DATE AND y.orgid=userid2orgid(in_userid);
-			details := CONCAT (details,',{"current_year_start":"',v_yearstartdate,'","current_year_end":"',v_yearenddate,'"}');
-
-			SELECT t.startdate, t.enddate, tt.descript INTO v_termstartdate, v_termenddate, v_termdescription FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid));
-			
-            v_count := (SELECT COUNT(*) FROM academicterm t JOIN termtypes tt ON t.termtype = tt.term WHERE t.enddate >= CURRENT_DATE AND t.yearid=active_year(userid2orgid(in_userid)));
-
-			IF v_count > 0 THEN
-				details := CONCAT (details, ',{"current_term_start":"',v_termstartdate,'","current_term_end":"',v_termenddate,'","current_term_description":"',v_termdescription,'"}');
-			END IF;
-		END IF;
-
-        details := CONCAT(details, ']') ;
-        RETURN details ;
-    ELSE
-        v_error := (SELECT fetchError(in_locale,'loginGoAway')) ;
+    IF v_examid = 0 THEN
+		v_error := (SELECT fetchError(in_locale,'classAddSeqNoActExam')) ;
 		RAISE EXCEPTION '%', v_error USING HINT = v_error;
-    END IF;
+	END IF;
+
+    v_examstartdate := (SELECT startdate FROM examinations WHERE examid = v_examid) ;
+
+    IF v_examstartdate > CURRENT_DATE THEN
+		v_error := (SELECT fetchError(in_locale,'classPrtReportYrNotStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    report_card := '{"error":false,"result":{"status":200, "value": ['; -- We open geenral array
+
+    v_students := (SELECT json_agg(t) FROM (SELECT s.userid FROM students s JOIN users u ON s.userid = u.userid WHERE s.classid = in_classid) AS t);
+
+    
+
+    report_card := CONCAT(report_card, ']}'); -- We close the array general array
+
+    CALL log_activity('classrooms','fetchReportCards',in_connid,CONCAT('Fetched report card for class=',in_classid),TRUE);
+
+    RETURN report_card;
 END; $$;
