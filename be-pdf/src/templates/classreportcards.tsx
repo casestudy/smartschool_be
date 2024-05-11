@@ -10,6 +10,7 @@ import ReactPDF, {
 } from "@react-pdf/renderer";
 import SequenceDetails from '../tables/reportcard/sequenceDetails';
 import StudentDetails from '../tables/reportcard/studentDetails';
+import ReportTable from '../tables/reportcard/table';
 
 type TemplateData = {
     name_en: string;
@@ -43,7 +44,9 @@ const styles = StyleSheet.create({
         margin: 15
     },
     section: {
-        fontSize: 9
+        fontSize: 9,
+        display: 'flex',
+        flexDirection: 'column'
     },
     heading: {
         fontWeight: 1000,
@@ -167,6 +170,7 @@ const PDF = ({ data }: PDFProps) => {
                             </View>
                         </View>
                         <StudentDetails student={entry[1]} classroom={data.classroom_details} total={data.student_details.length}/>
+                        <ReportTable details={entry[0]} calendar={data.calendar_details}/>
                     </View>
                 </Page>
             ))}
