@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     },
     col1: {
         display: 'flex',
-        flexBasis: '30%'
+        flexBasis: '25%'
     },
     col11: {
         display: 'flex',
@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     },
     col2: {
         display: 'flex',
-        flexBasis: '30%'
+        flexBasis: '25%'
     },
     col3: {
         display: 'flex',
-        flexBasis: '20%'
+        flexBasis: '30%'
     },
     col4: {
         display: 'flex',
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
                         </View>
                     </View>
                     <View style={styles.col4}>
-                        {studentBio.picture != null? <Image style={styles.image} source={`../be/uploads/students/pictures/${studentBio.picture}`}/> : ''} 
+                        {studentBio.picture != null? <Image style={styles.image} source={`../be/uploads/students/pictures/${studentBio.picture}`}/> : <Text></Text>} 
                     </View>
                 </View>
 

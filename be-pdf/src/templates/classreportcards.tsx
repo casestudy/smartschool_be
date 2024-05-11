@@ -40,7 +40,7 @@ const logo = '../be/assets/logo-1.png';
 const styles = StyleSheet.create({
     page: {
         backgroundColor: "#FFF",
-        margin: 10
+        margin: 15
     },
     section: {
         fontSize: 9
