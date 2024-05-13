@@ -20,6 +20,7 @@ type TemplateData = {
     student_details: any;
     calendar_details: any;
     classroom_details: any;
+    subject_details: any;
     details: string;
     year: string;
 };
@@ -144,7 +145,8 @@ const styles = StyleSheet.create({
 const PDF = ({ data }: PDFProps) => {
     return (
         <Document author="Smart School LTD" title={"Class report card: "+data.details} subject={"Class report card: "+data.details}>
-            {data.student_details.map((entry, index) => (
+
+            {data.student_details.map((entry: any, index: any) => (
                 <Page size="A4" style={styles.page} key={index}>                    
                     <View style={styles.section} >
                         <View style={styles.columnParent}>
@@ -170,7 +172,7 @@ const PDF = ({ data }: PDFProps) => {
                             </View>
                         </View>
                         <StudentDetails student={entry[1]} classroom={data.classroom_details} total={data.student_details.length}/>
-                        <ReportTable details={entry[0]} calendar={data.calendar_details}/>
+                        <ReportTable details={entry[0]} calendar={data.calendar_details} subjects={data.subject_details} alldata={data.student_details}/>
                     </View>
                 </Page>
             ))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, StyleSheet } from '@react-pdf/renderer';
 import ReportCardTableHeader from './tableHead'
+import ReportCardTableRows from './tableRows'
 // import InvoiceTableBlankSpace from './InvoiceTableBlankSpace'
 // import InvoiceTableFooter from './InvoiceTableFooter'
 
@@ -17,9 +18,10 @@ const styles = StyleSheet.create({
     },
 });
 
-  const ClassListTable = ({details, calendar}) => (
+  const ClassListTable = ({details, calendar, subjects, alldata}) => (
     <View style={styles.tableContainer}>
         <ReportCardTableHeader calendar={calendar}/>
+        <ReportCardTableRows details={details} calendar={calendar} subjects={subjects} alldata={alldata}/>
     </View>
   );
   

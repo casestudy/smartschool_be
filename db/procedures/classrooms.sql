@@ -668,9 +668,10 @@ BEGIN
     report_card := CONCAT(report_card, ']'); -- We close the array of all students
 
     v_subject_details := (SELECT json_agg(t) FROM (
-                                SELECT s.sname, s.code, s.subjectid
+                                SELECT s.sname, s.code, s.coefficient, s.subjectid, u.surname, u.othernames
                                 FROM subjects s
                                 JOIN classsubjects cs ON s.subjectid = cs.subjectid 
+                                JOIN users u ON u.userid = cs.userid
                                 WHERE cs.classid = in_classid
                                 ) AS t);
 

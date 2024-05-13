@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
                             <View style={{color: "#191970", textTransform: 'uppercase'}}><Text>{studentBio.oname}</Text></View>
                         </View>
                         <View style={styles.col11}>
-                            <View style={{color: "#191970"}}><Text>À / In </Text></View>
+                            <View style={{color: "#191970"}}><Text>À / In: </Text></View>
                             <View style={{textTransform: 'uppercase'}}><Text>{studentBio.pob}</Text></View>
                         </View>
                         <View style={styles.col11}>
