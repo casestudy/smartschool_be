@@ -1,15 +1,8 @@
 import React, { Fragment } from 'react';
 import {Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { RegisteredFonts } from '../../fonts/font';
 
 const borderColor = '#000000';
-
-Font.register({
-    family: 'Open Sans',
-    fonts: [
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-regular.ttf' },
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-600.ttf', fontWeight: 600 }
-    ]
-});
 
 const styles = StyleSheet.create({
     container: {
@@ -33,7 +26,9 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         justifyContent: 'center',
         alignItems: 'center',
-        alignContent: 'center'
+        alignContent: 'center',
+        fontFamily: RegisteredFonts.BoldSans,
+        fontWeight: 'bold'
     },
 
     subjects: {
@@ -88,10 +83,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '20%',
         paddingLeft: 5,
-        fontWeight: 1000,
+        fontWeight: 'bold',
         height: '100%',
-        fontSize: 6.5,
-        fontStyle: 'italic'
+        fontSize: 6,
+        fontFamily: RegisteredFonts.ItalicsSans,
+        fontStyle: 'italic',
+        color: '#191970'
     }
     
   });
@@ -204,7 +201,7 @@ const styles = StyleSheet.create({
             const subject = <View style={styles.container} key={count}>
                                 <View style={styles.subjects}>
                                     <Text>{currentsubject.sname} ({currentsubject.code})</Text>
-                                    <Text>{currentsubject.surname} {currentsubject.othernames}</Text>
+                                    <Text style={{fontFamily: RegisteredFonts.ItalicsSans, fontStyle: 'italic', color: '#191970'}}>{currentsubject.surname} {currentsubject.othernames}</Text>
                                 </View>
                                 <View style={styles.coef}>
                                     <Text>{currentsubject.coefficient}</Text>
@@ -245,27 +242,27 @@ const styles = StyleSheet.create({
         groupaverage = [];
 
         const groupsummary = <View style={styles.container} key={`summary: ${index}`}>
-                                <View style={styles.subjects}><Text>SUMMARY / RÉSUMÉ</Text></View>
+                                <View style={styles.subjects}><Text style={{fontFamily: RegisteredFonts.BoldSans, fontWeight: 'bold'}}>SUMMARY / RÉSUMÉ</Text></View>
                                 <View style={styles.coef}>
                                     <Text>{totalcoef}</Text>
                                 </View>
                                 <View style={styles.seq1}>
-                                    <Text>{totalseq1.toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                    <Text>{totalseq1.toLocaleString('en-US',{minimumIntegerDigits: 2, minimumFractionDigits: 2,maximumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.seq1}>
-                                    <Text>{totalmcoef.toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                    <Text>{totalmcoef.toLocaleString('en-US',{minimumIntegerDigits: 2, minimumFractionDigits: 2,maximumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.seq1}>
                                     <Text>{grouprank+1}</Text>
                                 </View>
                                 <View style={styles.seq1}>
-                                    <Text>{(grouphighest).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                    <Text>{(grouphighest).toLocaleString('en-US',{minimumIntegerDigits: 2, minimumFractionDigits: 2,maximumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.seq1}>
-                                    <Text>{(grouplowest).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                    <Text>{(grouplowest).toLocaleString('en-US',{minimumIntegerDigits: 2, minimumFractionDigits: 2,maximumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.seq1}>
-                                    <Text>{(groupgeneralaverage).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                    <Text>{(groupgeneralaverage).toLocaleString('en-US',{minimumIntegerDigits: 2, minimumFractionDigits: 2,maximumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.remarks}>
                                     <Text>{Remarks(totalmcoef / totalcoef)}</Text>

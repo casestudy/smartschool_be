@@ -1,15 +1,8 @@
 import React from 'react';
 import {Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { RegisteredFonts } from '../../fonts/font';
 
 const borderColor = '#000000';
-
-Font.register({
-    family: 'Open Sans',
-    fonts: [
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-regular.ttf' },
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-600.ttf', fontWeight: 600 }
-    ]
-});
 
 const styles = StyleSheet.create({
     container: {
@@ -22,7 +15,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         height: 11,
         textAlign: 'left',
-        fontSize: 7
+        fontSize: 7,
+        fontFamily: RegisteredFonts.BoldSans,
+        fontWeight: 'bold',
     },
 
     subjects: {

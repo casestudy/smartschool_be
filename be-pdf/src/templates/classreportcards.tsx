@@ -11,6 +11,7 @@ import ReactPDF, {
 import SequenceDetails from '../tables/reportcard/sequenceDetails';
 import StudentDetails from '../tables/reportcard/studentDetails';
 import ReportTable from '../tables/reportcard/table';
+import { RegisteredFonts } from '../fonts/font';
 
 type TemplateData = {
     name_en: string;
@@ -28,14 +29,6 @@ type TemplateData = {
 interface PDFProps {
     data: TemplateData;
 }
-
-Font.register({
-    family: 'Open Sans',
-    fonts: [
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-regular.ttf' },
-        { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-600.ttf', fontWeight: 600 }
-    ]
-});
 
 const logo = '../be/assets/logo-1.png';
 
@@ -70,13 +63,13 @@ const styles = StyleSheet.create({
         color: "#131925",
     },
     columnParent: {
-        fontFamily: "Open Sans",
         flexDirection: "row",
-        fontSize: 8,
+        fontSize: 7,
         lineHeight: 2,
-        fontWeight: 2000,
         display: "flex",
-        flexGrow: 1
+        flexGrow: 1,
+        fontFamily: RegisteredFonts.BoldSans,
+        fontWeight: 'bold'
     },
     columnStart: {
         fontFamily: "Open Sans",
