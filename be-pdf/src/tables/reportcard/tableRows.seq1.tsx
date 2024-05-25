@@ -89,10 +89,30 @@ const styles = StyleSheet.create({
         width: '20%',
         paddingLeft: 5,
         fontWeight: 1000,
-        height: '100%'
+        height: '100%',
+        fontSize: 6.5,
+        fontStyle: 'italic'
     }
     
   });
+
+  const Remarks = (mark: number) => {
+    let remark: any;
+  
+    if (mark < 10) {
+      remark = "Not Acquired / Non Acquis";
+    } else if (mark < 13) {
+      remark = "Acquisition in prog/En cours d'Acq";
+    } else if (mark < 15) {
+      remark = "Acquired / Acquis";
+    } else if (mark <= 20) {
+      remark = "Expert / Experte";
+    } else {
+      remark = "Error";
+    }
+  
+    return remark;
+  };
 
   const Seq1TableRow = ({details, subjects, alldata}) => {
     const sequence1 = details[0][0];
@@ -103,7 +123,33 @@ const styles = StyleSheet.create({
 
         const row = <View style={styles.container} key={`group: ${index}`}>
                         <View style={styles.grouptitles}><Text>{groupbio[0].gname}</Text></View>
-                    </View>
+                    </View> ;
+
+        let totalcoef = 0;
+        let totalseq1 = 0;
+        let totalmcoef = 0;
+        let totalmcoefarray = [];
+        let groupaverage = [];
+
+        alldata.map((currentstudent: any) => {
+            const currentsequence1 = currentstudent[0][0][0];
+
+            let currentstudentgroupmarks = [];
+
+            currentsequence1.map((currentgroup: any) => {
+                const currentgroupmarks = currentgroup[0];
+
+                let currentgroupmark = 0;
+
+                currentgroupmarks.forEach((obj: any) => {
+                    let currentsubject = subjects.find((cs: any) => cs.subjectid === obj.suid) ;
+                    currentgroupmark += (obj.mark * currentsubject.coefficient) ;
+                });
+                
+                currentstudentgroupmarks.push(currentgroupmark);
+            });
+            totalmcoefarray.push(currentstudentgroupmarks);
+        });
 
         const grouptable = groupmarks.map((marks: any, count: any) => {
             let currentsubject = subjects.find((obj: any) => obj.subjectid === marks.suid) ;
@@ -147,9 +193,14 @@ const styles = StyleSheet.create({
             }) ;
 
             generalaverage = generalaverage / allcurrentsubject.length ;
+            groupaverage.push(generalaverage);
 
             const rank = allcurrentsubject.findIndex((obj: any) => obj.mark === marks.mark);
 
+            totalcoef = totalcoef + currentsubject.coefficient;
+            totalseq1 = totalseq1 + marks.mark ;
+            totalmcoef = totalmcoef + (marks.mark * currentsubject.coefficient) ;
+            
             const subject = <View style={styles.container} key={count}>
                                 <View style={styles.subjects}>
                                     <Text>{currentsubject.sname} ({currentsubject.code})</Text>
@@ -177,14 +228,48 @@ const styles = StyleSheet.create({
                                     <Text>{generalaverage.toLocaleString('en-US',{minimumIntegerDigits: 2,minimumFractionDigits: 2})}</Text>
                                 </View>
                                 <View style={styles.remarks}>
-                                    <Text>{marks.mark * currentsubject.coefficient}</Text>
+                                    <Text>{Remarks(marks.mark)}</Text>
                                 </View>
                             </View> ;
             return subject;
         }) ;
 
+        let allgroupaverages = totalmcoefarray.map((stud: any) => stud[index]);
+        allgroupaverages = allgroupaverages.sort((a,b) => b - a);
+        const grouprank = allgroupaverages.indexOf(totalmcoef);
+        const grouphighest = Math.max(...allgroupaverages);
+        const grouplowest = Math.min(...allgroupaverages);
+
+        const groupsum = groupaverage.reduce((accumulator, current) => accumulator + current, 0);
+        const groupgeneralaverage = groupsum / groupaverage.length;
+        groupaverage = [];
+
         const groupsummary = <View style={styles.container} key={`summary: ${index}`}>
-                                <View style={styles.grouptitles}><Text>SUMMARY / RÉSUMÉ</Text></View>
+                                <View style={styles.subjects}><Text>SUMMARY / RÉSUMÉ</Text></View>
+                                <View style={styles.coef}>
+                                    <Text>{totalcoef}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{totalseq1.toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{totalmcoef.toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{grouprank+1}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{(grouphighest).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{(grouplowest).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                </View>
+                                <View style={styles.seq1}>
+                                    <Text>{(groupgeneralaverage).toLocaleString('en-US',{minimumIntegerDigits: 2,maximumFractionDigits: 2})}</Text>
+                                </View>
+                                <View style={styles.remarks}>
+                                    <Text>{Remarks(totalmcoef / totalcoef)}</Text>
+                                </View>
                             </View>;
 
         return <View key={`grouptable: ${index}`}>{row}{grouptable}{groupsummary}</View>;
