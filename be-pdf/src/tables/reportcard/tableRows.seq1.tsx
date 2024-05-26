@@ -201,8 +201,34 @@ const styles = StyleSheet.create({
             totalcoef = totalcoef + currentsubject.coefficient;
             totalseq1 = totalseq1 + marks.mark ;
             totalmcoef = totalmcoef + (marks.mark * currentsubject.coefficient) ;
+
+            let rowbg = {};
+            rowbg = {
+                display: 'flex',
+                flexDirection: 'row',
+                borderBottomColor: '#000000',
+                borderTopColor: '#000000',
+                borderBottomWidth: 1,
+                alignItems: 'center',
+                height: 20,
+                textAlign: 'left',
+                fontSize: 7,
+                lineHeight: 2
+            }
+
+            if(count % 2 !== 0) {
+                rowbg = {
+                    ...rowbg,
+                    backgroundColor: '#dddddd'
+                };
+            } else {
+                rowbg = {
+                    ...rowbg,
+                    backgroundColor: '#FFF'
+                };
+            }
             
-            const subject = <View style={styles.container} key={count}>
+            const subject = <View style={rowbg} key={count}>
                                 <View style={styles.subjects}>
                                     <Text>{currentsubject.sname} ({currentsubject.code})</Text>
                                     <Text style={{fontFamily: RegisteredFonts.ItalicsSans, fontStyle: 'italic', color: '#191970'}}>{currentsubject.surname} {currentsubject.othernames}</Text>
