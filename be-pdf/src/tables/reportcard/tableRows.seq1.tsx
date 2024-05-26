@@ -51,7 +51,9 @@ const styles = StyleSheet.create({
         borderRightColor: '#000000',
         borderRightWidth: 0.5,
         paddingLeft: 5,
-        height: '100%'
+        height: '100%',
+        fontFamily: RegisteredFonts.ItalicsSansOnly,
+        fontStyle: 'italic'
         
     },
 
@@ -63,7 +65,9 @@ const styles = StyleSheet.create({
         borderRightColor: '#000000',
         borderRightWidth: 0.5,
         paddingLeft: 5,
-        height: '100%'
+        height: '100%',
+        fontFamily: RegisteredFonts.ItalicsSansOnly,
+        fontStyle: 'italic'
     },
 
     tmp: {

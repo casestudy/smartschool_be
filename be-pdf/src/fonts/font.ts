@@ -27,8 +27,18 @@ Font.register(
     }
 );
 
+Font.register(
+    {
+        family: 'Open-Sans-Italic-Only',
+        fonts: [
+            { src: 'https://cdn.jsdelivr.net/npm/open-sans-all@0.1.3/fonts/open-sans-italic.ttf', fontStyle: 'italic'}
+        ]
+    }
+);
+
 export const RegisteredFonts = {
     OpenSans: 'Open Sans',
     BoldSans: 'Open-Sans-Bold',
-    ItalicsSans: 'Open-Sans-Italic'
+    ItalicsSans: 'Open-Sans-Italic',
+    ItalicsSansOnly: 'Open-Sans-Italic-Only'
 }
