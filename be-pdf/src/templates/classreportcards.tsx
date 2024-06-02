@@ -11,6 +11,8 @@ import ReactPDF, {
 import SequenceDetails from '../tables/reportcard/sequenceDetails';
 import StudentDetails from '../tables/reportcard/studentDetails';
 import ReportTable from '../tables/reportcard/table';
+import ReportCardTableFooter from '../tables/reportcard/footer';
+import ReportCardConclusion from '../tables/reportcard/reportConclusion';
 import { RegisteredFonts } from '../fonts/font';
 
 type TemplateData = {
@@ -166,6 +168,8 @@ const PDF = ({ data }: PDFProps) => {
                         </View>
                         <StudentDetails student={entry[1]} classroom={data.classroom_details} total={data.student_details.length}/>
                         <ReportTable details={entry[0]} calendar={data.calendar_details} subjects={data.subject_details} alldata={data.student_details}/>
+                        <ReportCardTableFooter details={entry[0]} calendar={data.calendar_details} subjects={data.subject_details} alldata={data.student_details}/>
+                        <ReportCardConclusion calendar={data.calendar_details}/>
                     </View>
                 </Page>
             ))}

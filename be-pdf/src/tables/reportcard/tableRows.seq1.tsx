@@ -19,6 +19,21 @@ const styles = StyleSheet.create({
         lineHeight: 2
     },
 
+    container_special: {
+        display: 'flex',
+        flexDirection: 'row',
+        borderBottomColor: '#000000',
+        borderTopColor: '#000000',
+        borderBottomWidth: 1,
+        backgroundColor: '#FFF',
+        alignItems: 'center',
+        height: 11,
+        textAlign: 'left',
+        fontSize: 7,
+        fontFamily: RegisteredFonts.BoldSans,
+        fontWeight: 'bold',
+    },
+
     grouptitles: {
         display: 'flex',
         flexDirection: 'row',
@@ -122,7 +137,7 @@ const styles = StyleSheet.create({
         const groupmarks = item[0];
         const groupbio = item[1];
 
-        const row = <View style={styles.container} key={`group: ${index}`}>
+        const row = <View style={styles.container_special} key={`group: ${index}`}>
                         <View style={styles.grouptitles}><Text>{groupbio[0].gname}</Text></View>
                     </View> ;
 
@@ -271,7 +286,7 @@ const styles = StyleSheet.create({
         const groupgeneralaverage = groupsum / groupaverage.length;
         groupaverage = [];
 
-        const groupsummary = <View style={styles.container} key={`summary: ${index}`}>
+        const groupsummary = <View style={styles.container_special} key={`summary: ${index}`}>
                                 <View style={styles.subjects}><Text style={{fontFamily: RegisteredFonts.BoldSans, fontWeight: 'bold'}}>SUMMARY / RÉSUMÉ</Text></View>
                                 <View style={styles.coef}>
                                     <Text>{totalcoef}</Text>
