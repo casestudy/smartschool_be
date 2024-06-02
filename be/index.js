@@ -3524,10 +3524,18 @@ app.post('/uploadstudentphoto', upload.single("picture"), async (req, res, next)
 				con.end();
 				res.send(utils.sendErrorMessage("updatestudentpicture",err.code,err.message));
 			} else {
-				const tes = await fs.promises.open(`uploads/students/${filename}`, 'w');
-				await tes.write(req.file.buffer);
-				res.send(rows.rows[0]["updatestudentpicture"]);
-				con.end();
+				if(!fs.existsSync(`uploads/students/pictures`)) {
+					fs.mkdirSync(`uploads/students/pictures`, { recursive: true });
+				}
+				//const tes = await fs.promises.open(`/uploads/students/pictures/${filename}`, 'w');
+				try {
+					await fs.promises.writeFile(`uploads/students/pictures/${filename}`, req.file.buffer);
+					res.send(rows.rows[0]["updatestudentpicture"]);
+					con.end();
+				} catch (error) {
+					con.end();
+					res.send(utils.sendErrorMessage("",453, error.message));
+				}
 			}
 		});
 	} else {
@@ -3578,7 +3586,7 @@ app.post('/getstudentphoto',getpic.single('picture'), async (req, res, next) => 
 			if(path !== null) {
 				var extension = path.split('.')[1];
 				
-				fs.readFile(`uploads/students/${path}`, function(err, data) {
+				fs.readFile(`uploads/students/pictures/${path}`, function(err, data) {
 					if (err) {
 						res.send(utils.sendErrorMessage("getstudentpicture",err.code,err.message));
 					} else {
@@ -3840,6 +3848,87 @@ app.all('/submitmarks', (req, res) => {
 		}
 	});
 
+});
+
+// Generate report cards for a class
+app.all('/printreportcards', (req, res) => { 
+	const con = new Client(conndetails);
+	con.connect();
+
+	let connid = '';
+	let classid = '';
+	let locale = '';
+	let print = '';
+
+	if(req.query.hasOwnProperty('connid') || req.body.hasOwnProperty('connid')) {
+		connid = req.query.hasOwnProperty('connid') ? req.query["connid"] : req.body["connid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- connid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('classid') || req.body.hasOwnProperty('classid')) {
+		classid = req.query.hasOwnProperty('classid') ? req.query["classid"] : req.body["classid"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- classid"));
+		return;
+	}
+
+	if(req.query.hasOwnProperty('locale') || req.body.hasOwnProperty('locale')) {
+		locale = req.query.hasOwnProperty('locale') ? req.query["locale"] : req.body["locale"] ;
+	} else {
+		res.send(utils.sendErrorMessage("",453,"Missing required parameter -- locale"));
+		return ;
+	}
+
+	const query = 'SELECT generatereportcard('+ mysql.escape(connid)+','+mysql.escape(classid)+','+mysql.escape(locale)+')';
+
+	con.query(query, async (err, rows) => {
+		if (err) {
+			con.end();
+			res.send(utils.sendErrorMessage("generatereportcard",err.code,err.message));
+		} else {
+			const result = JSON.parse(rows.rows[0]["generatereportcard"]); 
+				
+			let header;
+			Heads.map((e)=> {
+				if (e.org_id === 1) {
+					header = e; 
+				}
+			});
+
+			const student_details = result.result.value[0];
+			const subject_details = result.result.value[1];
+			const calendar = result.result.value[2];
+			const classroom = result.result.value[3];
+				
+			const ystart = new Date(calendar[0].ystart).getFullYear();
+			const yend = new Date(calendar[0].yend).getFullYear();
+
+			const year = ystart + " - " + yend ;
+			const cname = `${classroom[0].cname} (${classroom[0].abbreviation})`;
+			header['student_details'] = student_details	
+			header['subject_details'] = subject_details;  
+			header['calendar_details'] = calendar;  
+			header['classroom_details'] = classroom;  
+			header['year'] = year;
+			header['details'] = cname;
+				
+			axios.post('http://localhost:6000/reportcard', { data: JSON.stringify(header) }).then((response) => {
+				if (!response.data.error) {
+					let clname = cname.replace(/ /g, "_");
+					const bitmap = fs.readFileSync(`./uploads/reportcards/${year}/${clname}.pdf`, 'base64');
+					res.send(`{"error":false,"data":"${bitmap}"}`);
+				} else {
+					res.send(response.data);
+				}
+			}).catch((err) => { 
+				res.send(utils.sendErrorMessage("",453,err.code + ' on ' + err.port));
+			});
+			
+			con.end();
+		}
+	});
 });
 
 app.listen(port, () => {

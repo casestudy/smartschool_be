@@ -485,3 +485,237 @@ BEGIN
 
     RETURN au;
 END; $$;
+
+-- Generates student's report card
+DROP FUNCTION IF EXISTS generatereportcard;
+CREATE OR REPLACE FUNCTION generatereportcard (IN in_connid VARCHAR(128), IN in_classid INTEGER,  IN in_locale VARCHAR(5)) RETURNS VARCHAR(9216) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_userid INTEGER;
+    v_orgid INTEGER;
+    v_yearid INTEGER;
+    v_termid INTEGER;
+    v_examid INTEGER;
+    v_teacherid INTEGER;
+    v_examstartdate DATE;
+    v_students JSON;
+    v_terms JSON;
+    v_exams JSON;
+    v_exammarks JSON;
+    i INTEGER;
+    v_student JSON;
+    v_student_length INTEGER;
+    j INTEGER;
+    v_term JSON;
+    v_term_length INTEGER;
+    k INTEGER;
+    v_exam_length INTEGER;
+    v_exam JSON;
+    m INTEGER;
+    v_exammark JSON;
+    v_exammark_length INTEGER;
+    v_student_details JSON;
+    v_subject_details JSON;
+    v_calendar_details JSON;
+    v_classroom_details JSON;
+    v_groups JSON;
+    v_group JSON;
+    v_group_details JSON;
+    v_groups_length INTEGER;
+    l INTEGER;
+    v_error VARCHAR(255);
+    report_card VARCHAR(9216);
+BEGIN
+    CALL log_activity('classrooms','fetchReportCards',in_connid,CONCAT('_H:',in_connid),FALSE);
+    CALL verifyprivilege(in_connId, 'VIEWCLASS');
+
+    v_userid := connid2userid(in_connid);
+	v_orgid := userid2orgid(v_userid);
+    v_yearid := active_year(v_orgid);
+    v_termid := active_term(v_yearid);
+    v_examid := active_exam(v_termid) ;
+
+    IF v_examid = 0 THEN
+		v_error := (SELECT fetchError(in_locale,'classAddSeqNoActExam')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    v_examstartdate := (SELECT startdate FROM examinations WHERE examid = v_examid) ;
+
+    IF v_examstartdate > CURRENT_DATE THEN
+		v_error := (SELECT fetchError(in_locale,'classPrtReportYrNotStart')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+	END IF;
+
+    report_card := '{"error":false,"result":{"status":200, "value": ['; -- We open general array
+
+    report_card := CONCAT(report_card, '['); -- We open the array of all students
+
+    v_students := (SELECT json_agg(t) FROM (SELECT s.userid FROM students s JOIN users u ON u.userid = s.userid  WHERE s.classid = in_classid AND u.deleted = FALSE AND s.sstatus NOT IN ('dismissed','graduate') AND s.userid NOT IN (SELECT userid FROM legacy WHERE yearid=v_yearid AND classid <> in_classid) ORDER BY u.surname) AS t);
+    v_student_length := json_array_length(v_students);
+
+    IF v_student_length <= 0 OR v_student_length IS NULL THEN
+        v_error := (SELECT fetchError(in_locale,'classStudsNotInClass')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+
+    FOR i IN 0..v_student_length-1
+    LOOP
+        v_student := v_students->i;
+        report_card := CONCAT(report_card, '['); -- We open the array of current student
+
+        report_card := CONCAT(report_card, '['); -- We open the array of terms
+
+        v_terms := (SELECT json_agg(t) FROM (SELECT termid FROM academicterm WHERE yearid = v_yearid) AS t);
+        v_term_length := JSON_ARRAY_LENGTH(v_terms);
+
+        FOR j IN 0..v_term_length-1
+        LOOP
+            v_term := v_terms->j;
+            report_card := CONCAT(report_card, '['); -- We open the array of current term
+
+            v_exams := (SELECT json_agg(t) FROM (SELECT examid FROM examinations WHERE term = (v_term->>'termid')::int AND startdate <= CURRENT_DATE AND orgid = v_orgid) AS t);
+            v_exam_length := JSON_ARRAY_LENGTH(v_exams);
+
+            FOR k IN 0..v_exam_length - 1
+            LOOP
+                v_exam := v_exams->k ;
+                report_card := CONCAT(report_card, '['); -- We open the array of current exam
+
+                -- We need to build array of groups
+
+                v_groups := (SELECT json_agg(t) FROM (SELECT groupid FROM groups WHERE academicyearid = v_yearid) AS t);
+                v_groups_length := JSON_ARRAY_LENGTH(v_groups);
+
+                FOR l IN 0..v_groups_length - 1
+                LOOP
+                    v_group := v_groups->l ;
+                    report_card := CONCAT(report_card, '['); -- We open the array of current group
+
+                    v_exammarks := (SELECT json_agg(t) FROM (SELECT er.mark, er.subjectid FROM examresults er JOIN groupings gr ON er.subjectid = gr.subjectid WHERE gr.groupid = (v_group->>'groupid')::int AND er.userid = (v_student->>'userid')::int AND er.examid = (v_exam->>'examid')::int) AS t);
+                    v_exammark_length := JSON_ARRAY_LENGTH(v_exammarks);
+
+                    report_card := CONCAT(report_card, '['); -- We open the array of current group marks
+
+                    FOR m IN 0..v_exammark_length - 1
+                    LOOP
+                        v_exammark := v_exammarks->m;
+
+                        v_teacherid := (SELECT userid FROM classsubjects WHERE classid = in_classid AND subjectid = (v_exammark->>'subjectid')::int AND yearid = v_yearid);
+                        IF m = v_exammark_length - 1 THEN
+                            report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'}'); -- We add the current mark and its the last
+                        ELSE
+                            report_card := CONCAT(report_card, '{"stid":', v_student->>'userid',',"suid":',v_exammark->>'subjectid',',"mark":', v_exammark->>'mark',',"teid":',v_teacherid,'},'); -- We add the current mark
+                        END IF;
+                    END LOOP;
+
+                    report_card := CONCAT(report_card, ']'); -- We close the array of current group marks
+
+                    v_group_details := (SELECT json_agg(t) FROM (
+                                    SELECT groupid, gname 
+                                    FROM groups
+                                    WHERE groupid = (v_group->>'groupid')::int 
+                                    ) AS t);
+
+                    IF v_group_details IS NULL THEN
+                        v_group_details := '[]';
+                    END IF;
+
+                    report_card := CONCAT(report_card, ',', v_group_details); -- We append the group details
+
+                    IF l = v_groups_length - 1 THEN
+                        report_card := CONCAT(report_card, ']'); -- We close the array of current group
+                    ELSE
+                        report_card := CONCAT(report_card, '],'); -- We close the array of current group and can add another term
+                    END IF;
+                END LOOP;
+
+                IF k = v_exam_length - 1 THEN
+                    report_card := CONCAT(report_card, ']'); -- We close the array of current exam
+                ELSE 
+                    report_card := CONCAT(report_card, '],'); -- We close the array of current exam and can add another exam
+                END IF;
+
+            END LOOP;
+
+            IF j = v_term_length - 1 THEN
+                report_card := CONCAT(report_card, ']'); -- We close the array of current term
+            ELSE
+                report_card := CONCAT(report_card, '],'); -- We close the array of current term and can add another term
+            END IF;
+            
+        END LOOP;
+
+        report_card := CONCAT(report_card, ']'); -- We close the array of all terms
+
+        v_student_details := (SELECT json_agg(t) FROM (
+                                    SELECT u.userid AS stid, u.surname AS sname, u.othernames AS oname, u.dob, s.matricule, s.picture, s.pob 
+                                    FROM users u 
+                                    JOIN students s ON u.userid = s.userid 
+                                    WHERE u.userid = (v_student->>'userid')::int 
+                                    AND u.usertype = 'student' AND s.sstatus NOT IN ('dismissed','graduate')
+                                    ) AS t);
+
+        IF v_student_details IS NULL THEN
+            v_student_details := '[]';
+        END IF;
+
+        report_card := CONCAT(report_card, ',', v_student_details); -- We append the student details
+
+        IF i = v_student_length -1 THEN
+            report_card := CONCAT(report_card, ']'); -- We close the array of current student
+        ELSE 
+            report_card := CONCAT(report_card, '],'); -- We close the array of current student and can add another student
+        END IF;
+        
+    END LOOP;
+
+    report_card := CONCAT(report_card, ']'); -- We close the array of all students
+
+    v_subject_details := (SELECT json_agg(t) FROM (
+                                SELECT s.sname, s.code, s.coefficient, s.subjectid, u.surname, u.othernames
+                                FROM subjects s
+                                JOIN classsubjects cs ON s.subjectid = cs.subjectid 
+                                JOIN users u ON u.userid = cs.userid
+                                WHERE cs.classid = in_classid
+                                ) AS t);
+
+    IF v_subject_details IS NULL THEN
+        v_subject_details := '[]';
+    END IF;
+
+    report_card := CONCAT(report_card, ',', v_subject_details); -- We append the subject details
+
+    v_calendar_details := (SELECT json_agg(t) FROM (
+                                SELECT ay.startdate AS ystart, ay.enddate AS yend, 
+                                        at.startdate AS tstart, at.enddate AS tend, 
+                                        ex.startdate AS estart, ex.enddate AS eend, ex.examtype AS etype 
+                                FROM academicyear ay 
+                                JOIN academicterm at ON ay.yearid = at.yearid
+                                JOIN examinations ex ON at.termid = ex.term 
+                                WHERE ay.yearid=v_yearid AND at.termid = v_termid AND ex.term = v_termid) AS t);
+
+    IF v_calendar_details IS NULL THEN
+        v_calendar_details := '[]';
+    END IF;
+
+    report_card := CONCAT(report_card, ',', v_calendar_details); -- We append the calendar details
+
+     v_classroom_details := (SELECT json_agg(t) FROM (
+                                SELECT c.classid, c.cname, c.abbreviation, COALESCE(u.surname, '') AS surname, COALESCE(u.othernames,'') AS othernames 
+                                FROM classrooms c 
+                                LEFT OUTER JOIN users u ON c.classmaster = u.userid
+                                WHERE c.classid = in_classid) AS t);
+
+    IF v_classroom_details IS NULL THEN
+        v_classroom_details := '[]';
+    END IF;
+
+    report_card := CONCAT(report_card, ',', v_classroom_details); -- We append the classroom details
+
+    report_card := CONCAT(report_card, ']}}'); -- We close the array general array
+
+    CALL log_activity('classrooms','fetchReportCards',in_connid,CONCAT('Fetched report card for class=',in_classid),TRUE);
+
+    RETURN report_card;
+END; $$;
