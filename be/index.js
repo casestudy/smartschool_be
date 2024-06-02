@@ -3917,7 +3917,7 @@ app.all('/printreportcards', (req, res) => {
 			axios.post('http://localhost:6000/reportcard', { data: JSON.stringify(header) }).then((response) => {
 				if (!response.data.error) {
 					let clname = cname.replace(/ /g, "_");
-					const bitmap = fs.readFileSync(`./uploads/reportcard/${year}/${clname}.pdf`, 'base64');
+					const bitmap = fs.readFileSync(`./uploads/reportcards/${year}/${clname}.pdf`, 'base64');
 					res.send(`{"error":false,"data":"${bitmap}"}`);
 				} else {
 					res.send(response.data);
