@@ -554,6 +554,11 @@ BEGIN
     v_students := (SELECT json_agg(t) FROM (SELECT s.userid FROM students s JOIN users u ON u.userid = s.userid  WHERE s.classid = in_classid AND u.deleted = FALSE AND s.sstatus NOT IN ('dismissed','graduate') AND s.userid NOT IN (SELECT userid FROM legacy WHERE yearid=v_yearid AND classid <> in_classid) ORDER BY u.surname) AS t);
     v_student_length := json_array_length(v_students);
 
+    IF v_student_length <= 0 OR v_student_length IS NULL THEN
+        v_error := (SELECT fetchError(in_locale,'classStudsNotInClass')) ;
+		RAISE EXCEPTION '%', v_error USING HINT = v_error;
+    END IF;
+
     FOR i IN 0..v_student_length-1
     LOOP
         v_student := v_students->i;
