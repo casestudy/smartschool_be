@@ -26,7 +26,7 @@ app.use(cors()); //Allows request from an external url different from that of th
 
 const conndetails = {
     user: 'fabricefemencha',
-    host: 'localhost', //ffedfd70407b
+    host: 'smartschool-db', //ffedfd70407b
     database: 'shopman_pos',
     password: 'Azemchop1988.',
     port: 5432,

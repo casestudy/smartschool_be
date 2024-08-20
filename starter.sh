@@ -8,8 +8,17 @@ docker build -t frontend-app-image ./smartschool-fe -f ./smartschool-fe/Dockerfi
 # Build the Node.js server image
 docker build -t backend-server-image ./smartschool_be/be -f ./smartschool_be/be/Dockerfile-be
 
+# Build the Node.js server image
+docker build -t database-server-image ./smartschool_be/db -f ./smartschool_be/db/Dockerfile-db
+
+# Create a network to connect all containers
+docker network create smartschool-network
+
 # Start the Node.js server container
-docker run -d -p 4000:4000 -v ./smartschool_be/be/:/app/ backend-server-image
+docker run --name smartschool-be --network smartschool-network -d -p 4000:4000 -v ./smartschool_be/be/:/app/ backend-server-image
 
 # Start the React app container
-docker run -d -p 3000:3000 -v ./smartschool-fe/:/app/ frontend-app-image
+docker run --name smartschool-fe --network smartschool-network -d -p 3000:3000 -v ./smartschool-fe/:/app/ frontend-app-image
+
+# Run start the database
+docker run --name smartschool-db --network smartschool-network -d -p 5432:5432 -v ./smartschool_be/db/:/app/ database-server-image
