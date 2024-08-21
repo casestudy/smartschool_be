@@ -25,10 +25,10 @@ const app = express();
 app.use(cors()); //Allows request from an external url different from that of the server
 
 const conndetails = {
-    user: 'fabricefemencha',
+    user: '',
     host: 'smartschool-db', //ffedfd70407b
     database: 'shopman_pos',
-    password: 'Azemchop1988.',
+    password: '',
     port: 5432,
 }
 
