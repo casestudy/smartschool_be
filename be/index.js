@@ -3397,7 +3397,7 @@ app.all('/getstudentfees', (req, res) => {
 						header['details'] = result.result.details;  
 						header['year'] = year;
 						
-						axios.post('http://localhost:6000/studentreceipts', { data: JSON.stringify(header) }).then((response) => {
+						axios.post('http://smartschool-pdf:4500/studentreceipts', { data: JSON.stringify(header) }).then((response) => {
 							if (!response.data.error) {
 								const bitmap = fs.readFileSync(`./uploads/studentreceipts/${currentyear}/${sname}.pdf`, 'base64');
 								res.send(`{"error":false,"data":"${bitmap}"}`);
@@ -3935,7 +3935,7 @@ app.all('/getclassroomstudents', (req, res) => {
 						header['details'] = cname;  
 						header['year'] = year;
 						
-						axios.post('http://localhost:6000/classlist', { data: JSON.stringify(header) }).then((response) => {
+						axios.post('http://smartschool-pdf:4500/classlist', { data: JSON.stringify(header) }).then((response) => {
 							if (!response.data.error) {
 								let clname = cname.replace(/ /g, "_");
 								const bitmap = fs.readFileSync(`./uploads/classlists/${year}/${clname}.pdf`, 'base64');
@@ -4143,7 +4143,7 @@ app.all('/printreportcards', (req, res) => {
 				header['year'] = year;
 				header['details'] = cname;
 					
-				axios.post('http://localhost:6000/reportcard', { data: JSON.stringify(header) }).then((response) => {
+				axios.post('http://smartschool-pdf:4500/reportcard', { data: JSON.stringify(header) }).then((response) => {
 					if (!response.data.error) {
 						let clname = cname.replace(/ /g, "_");
 						const bitmap = fs.readFileSync(`./uploads/reportcards/${year}/${clname}.pdf`, 'base64');

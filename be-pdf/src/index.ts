@@ -7,7 +7,7 @@ import createReportCardTemplate from "./templates/classreportcards";
 const app = express();
 app.use(express.json());
 
-const port = 6000;
+const port = 4500;
 app.listen(port, () => {
   console.log(`The sample PDF app is running on port ${port}.`);
 });
