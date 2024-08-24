@@ -3,8 +3,8 @@ FROM postgres:16.4
 
 # Environment variables
 ENV POSTGRES_DB=shopman_pos
-ENV POSTGRES_USER=fabricefemencha
-ENV POSTGRES_PASSWORD=Azemchop1988.
+ENV POSTGRES_USER=
+ENV POSTGRES_PASSWORD=
 
 # Copy SQL scripts to initialize the database
 COPY . /app/
